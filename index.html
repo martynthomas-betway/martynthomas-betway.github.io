@@ -6,9 +6,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script>
-        window.alert("testing");
-        console.log(window.location);
-        var appOrigin = "https://martynthomas-betway.github.io/"; // the origin where the app runs
+        window.alert("I Exist");
+        var appOrigin = "https://martynthomas-betway.github.io"; // the origin where the app runs
         window.addEventListener("DOMContentLoaded", () => {
             window.parent.postMessage(
                 {
@@ -21,47 +20,44 @@
         });
         window.addEventListener("message", (event) => {
             console.log(event);
-            // Do we trust the sender of this message?  (might be
-            // different from what we originally opened, for example).
-
-            console.log('hello', event);
-
-            // The data was sent from your site.
-            // Data sent with postMessage is stored in event.data:
-            if (event.data.message_type === "app_hello") {
-                console.log('loaded');
-                // document.body.insertAdjacentHTML("afterbegin", JSON.stringify(event, null, "\t"));
-                window.parent.postMessage({ message_type: "widget_initialized" }, appOrigin);
-                const state = JSON.parse(event.data.widget_state);
-                if (state.name) { document.querySelector("#name").value = state.name; }
-                if (state.url) { document.querySelector("#url").value = state.url; }
-            } else if (event.data.message_type === "app_request_state") {
-                console.log("requested state");
-                var body = JSON.stringify({ "name": document.querySelector("#name").value, "url": document.querySelector("#url").value });
-                var webhook = {
-                    message_type: "widget_state",
-                    webhook: {
-                        auth_integration_id: null,
-                        auth_user: "",
-                        communication_type: "",
-                        concurrency_limit: null,
-                        consent_category: "other",
-                        content_type: "application/json",
-                        body: body,
-                        frequency_policy: "",
-                        general_consent: false,
-                        headers: [],
-                        method: "POST",
-                        response_handling: "json",
-                        throughput_policy_id: null,
-                        type: "per-customer-webhook-action",
-                        url: document.querySelector("#url").value,
-                    },
-                    widget_state: body
-                };
-                console.log(webhook);
-                window.parent.postMessage(webhook, appOrigin);
-
+            if (event.origin.startsWith("https://app-cis.exponea.com") || event.origin.startsWith("https://app.exponea.com")) {
+                console.log('hello', event);
+                if (event.data.message_type === "app_hello") {
+                    console.log('loaded');
+                    window.parent.postMessage({ message_type: "widget_initialized" }, appOrigin);
+                    const state = JSON.parse(event.data.widget_state);
+                    if (state.name) { document.querySelector("#name").value = state.name; }
+                    if (state.url) { document.querySelector("#url").value = state.url; }
+                } else if (event.data.message_type === "app_request_state") {
+                    console.log("requested state");
+                    var body = JSON.stringify({ "name": document.querySelector("#name").value, "url": document.querySelector("#url").value });
+                    var webhook = {
+                        message_type: "widget_state",
+                        webhook: {
+                            auth_integration_id: null,
+                            auth_user: "",
+                            communication_type: "",
+                            concurrency_limit: null,
+                            consent_category: "other",
+                            content_type: "application/json",
+                            body: body,
+                            frequency_policy: "",
+                            general_consent: false,
+                            headers: [],
+                            method: "POST",
+                            response_handling: "json",
+                            throughput_policy_id: null,
+                            type: "per-customer-webhook-action",
+                            url: document.querySelector("#url").value,
+                        },
+                        widget_state: body,
+                    };
+                    console.log(webhook);
+                    window.parent.postMessage(webhook, appOrigin);
+                } else {
+                    console.log("bad origin");
+                    return;
+                }
             }
         });
     </script>
