@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script>
+        var appOrigin = "https://app.exponea.com"; // the origin where the app runs
+        window.addEventListener("DOMContentLoaded", () => {
+            window.parent.postMessage(
+                {
+                    min_supported_version: 1, // to be used in the future for compatibility, must be present
+                    max_supported_version: 1, // to be used in the future for compatibility, must be present
+                    message_type: "widget_hello",
+                },
+                appOrigin
+            );
+        });
+        window.addEventListener("message", (event) => {
+            // Do we trust the sender of this message?  (might be
+            // different from what we originally opened, for example).
+            if (event.origin.startsWith("https://app-cis.exponea.com") || event.origin.startsWith("https://app.exponea.com")) {
+                console.log('hello', event);
+
+                // The data was sent from your site.
+                // Data sent with postMessage is stored in event.data:
+                if (event.data.message_type === "app_hello") {
+                    console.log('loaded');
+                    // document.body.insertAdjacentHTML("afterbegin", JSON.stringify(event, null, "\t"));
+                    window.parent.postMessage(
+                        {
+                            message_type: "widget_initialized",
+                        },
+                        appOrigin
+                    );
+                    const state = JSON.parse(event.data.widget_state);
+                    if (state.name) {
+                        document.querySelector("#name").value = state.name;
+                    }
+                    if (state.url) {
+                        document.querySelector("#url").value = state.url;
+                    }
+                } else if (event.data.message_type === "app_request_state") {
+                    console.log("requested state");
+                    var body = JSON.stringify({ "name": document.querySelector("#name").value, "url": document.querySelector("#url").value });
+                    var webhook = {
+                        message_type: "widget_state",
+                        // webhook data as specified in initialization, except that auth password
+                        // and secret header values must be specified (if applicable)
+                        webhook: {
+                            auth_integration_id: null,
+                            auth_user: "",
+                            communication_type: "",
+                            concurrency_limit: null,
+                            consent_category: "other",
+                            content_type: "application/json",
+                            body: body,
+                            frequency_policy: "",
+                            general_consent: false,
+                            headers: [],
+                            method: "POST",
+                            response_handling: "json",
+                            throughput_policy_id: null,
+                            type: "per-customer-webhook-action",
+                            url: document.querySelector("#url").value,
+                        },
+                        widget_state: body, // a javascript object that can be JSON serialized, the widget can store
+                        // any arbitrary state that needs to be preserved for the correct
+                        // initialization of the widget later. this data should not contain any
+                        // secrets and it's size is limited to 4KB when serialized.
+                    };
+                    // document.querySelector("#root").innerHTML = JSON.stringify(webhook, null, "\t");
+                    console.log(webhook);
+                    window.parent.postMessage(webhook, appOrigin);
+                } else {
+                    // The data was NOT sent from your site!
+                    // Be careful! Do not use it. This else branch is
+                    // here just for clarity, you usually shouldn't need it.
+                    console.log("bad origin");
+                    return;
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div id="root" style="width: 75%">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Here's a widget webhook!</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <input class="form-control" type="text" name="name" id="name" placeholder="enter your name">
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">URL:</label>
+                    <input class="form-control" type="url" name="url" id="url" placeholder="enter the url"
+                        value="https://enghtax5k9al8rh.m.pipedream.net">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
