@@ -20,7 +20,8 @@
         });
         window.addEventListener("message", (event) => {
             console.log(event);
-            if (event.origin.startsWith("https://app-cis.exponea.com") || event.origin.startsWith("https://app.exponea.com")) {
+            
+            if (["https://demoapp.bloomreach.com", "https://app-cis.exponea.com", "https://app.exponea.com"].includes(event.origin)) {
                 console.log('hello', event);
                 if (event.data.message_type === "app_hello") {
                     console.log('loaded');
